@@ -34,6 +34,16 @@ type DebugResult struct {
 	ListenStr string
 }
 
+
+func stopNode() {
+	// Since we have reference to same process we can also use cmd.Process.Kill()
+	strb, _ := ioutil.ReadFile("wakunode2.lock")
+	command := exec.Command("kill", string(strb))
+	command.Start()
+	log.Printf("stopping wakunode2 process %s", string(strb))
+}
+
+
 func main() {
 	sigs := make(chan os.Signal, 1)
 	done := make(chan bool, 1)
@@ -43,8 +53,8 @@ func main() {
 	// Waiting for signal
 	go func() {
 		sig := <-sigs
-		fmt.Println()
-		fmt.Println(sig)
+		log.Printf("received %s", sig)
+		stopNode()
 		done <- true
 	}()
 
@@ -107,17 +117,8 @@ func main() {
 
 	log.Printf("JSON RPC response listenStr: %s", res["listenStr"])
 
-	// Stop process
-	// Since we have reference to same process we can also use cmd.Process.Kill()
-	strb, _ := ioutil.ReadFile("wakunode2.lock")
-	command := exec.Command("kill", string(strb))
-	command.Start()
-	log.Printf("Stopping wakunode2 process")
-
-	log.Printf("Just ran subprocess %d, exiting\n", cmd.Process.Pid)
-
-    fmt.Println("awaiting signal")
+    log.Printf("awaiting signal")
     <-done
-    fmt.Println("exiting")
+    log.Printf("exiting")
 
 }
