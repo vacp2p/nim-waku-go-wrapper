@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
     "encoding/json"
+	"time"
 	"bytes"
 	"os"
 	"os/exec"
@@ -35,12 +37,18 @@ func main() {
 	// TODO Redirect to file
 	cmd.Stdout = os.Stdout
 	err := cmd.Start()
+    fmt.Printf("wakunode2 start, [PID] %d running...\n", cmd.Process.Pid)
+    ioutil.WriteFile("wakunode2.lock", []byte(fmt.Sprintf("%d", cmd.Process.Pid)), 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Printf("Just ran subprocess %d, exiting\n", cmd.Process.Pid)
 
 	// TODO This should wait a bit
+	time.Sleep(2000 * time.Millisecond)
+
+	// TODO If we shut down, process should be killed too
+
 	// Run this in background
 	fmt.Println("JSON RPC request: get_waku_v2_debug_v1_info")
 
@@ -78,4 +86,11 @@ func main() {
 	var res = dat["result"].(map[string]interface{})
 
 	fmt.Println("listenStr:", res["listenStr"])
+
+	// Stop process
+	// Since we have reference to same process we can also use cmd.Process.Kill()
+	strb, _ := ioutil.ReadFile("wakunode2.lock")
+	command := exec.Command("kill", string(strb))
+	command.Start()
+	fmt.Println("Stopping wakunode2 process")
 }
