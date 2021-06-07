@@ -3,8 +3,11 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
     "encoding/json"
 	"bytes"
+	"os"
+	"os/exec"
 	"net/http"
 )
 
@@ -28,6 +31,17 @@ type DebugResult struct {
 }
 
 func main() {
+	cmd := exec.Command("./wakunode2")
+	// TODO Redirect to file
+	cmd.Stdout = os.Stdout
+	err := cmd.Start()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Just ran subprocess %d, exiting\n", cmd.Process.Pid)
+
+	// TODO This should wait a bit
+	// Run this in background
 	fmt.Println("JSON RPC request: get_waku_v2_debug_v1_info")
 
 	data := Payload{
