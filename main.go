@@ -34,20 +34,26 @@ type DebugResult struct {
 
 func main() {
 	cmd := exec.Command("./wakunode2")
-	// TODO Redirect to file
-	cmd.Stdout = os.Stdout
-	err := cmd.Start()
-    fmt.Printf("wakunode2 start, [PID] %d running...\n", cmd.Process.Pid)
-    ioutil.WriteFile("wakunode2.lock", []byte(fmt.Sprintf("%d", cmd.Process.Pid)), 0666)
+
+    outfile, err := os.Create("./wakunode2.log")
+	if err != nil {
+		panic(err)
+    }
+    defer outfile.Close()
+
+	//cmd.Stdout = os.Stdout
+	cmd.Stdout = outfile
+
+	err = cmd.Start()
 	if err != nil {
 		log.Fatal(err)
 	}
+
+    fmt.Printf("wakunode2 start, [PID] %d running...\n", cmd.Process.Pid)
+    ioutil.WriteFile("wakunode2.lock", []byte(fmt.Sprintf("%d", cmd.Process.Pid)), 0666)
 	log.Printf("Just ran subprocess %d, exiting\n", cmd.Process.Pid)
 
-	// TODO This should wait a bit
 	time.Sleep(2000 * time.Millisecond)
-
-	// TODO If we shut down, process should be killed too
 
 	// Run this in background
 	fmt.Println("JSON RPC request: get_waku_v2_debug_v1_info")
