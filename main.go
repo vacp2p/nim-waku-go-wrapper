@@ -10,6 +10,8 @@ import (
 	"bytes"
 	"os"
 	"os/exec"
+	"os/signal"
+	"syscall"
 	"net/http"
 )
 
@@ -33,6 +35,19 @@ type DebugResult struct {
 }
 
 func main() {
+	sigs := make(chan os.Signal, 1)
+	done := make(chan bool, 1)
+
+    signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	// Waiting for signal
+	go func() {
+		sig := <-sigs
+		fmt.Println()
+		fmt.Println(sig)
+		done <- true
+	}()
+
 	cmd := exec.Command("./wakunode2")
 
     outfile, err := os.Create("./wakunode2.log")
@@ -98,4 +113,11 @@ func main() {
 	command := exec.Command("kill", string(strb))
 	command.Start()
 	log.Printf("Stopping wakunode2 process")
+
+	log.Printf("Just ran subprocess %d, exiting\n", cmd.Process.Pid)
+
+    fmt.Println("awaiting signal")
+    <-done
+    fmt.Println("exiting")
+
 }
