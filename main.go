@@ -49,14 +49,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-    fmt.Printf("wakunode2 start, [PID] %d running...\n", cmd.Process.Pid)
+    log.Printf("wakunode2 start, [PID] %d running...\n", cmd.Process.Pid)
     ioutil.WriteFile("wakunode2.lock", []byte(fmt.Sprintf("%d", cmd.Process.Pid)), 0666)
-	log.Printf("Just ran subprocess %d, exiting\n", cmd.Process.Pid)
 
 	time.Sleep(2000 * time.Millisecond)
 
 	// Run this in background
-	fmt.Println("JSON RPC request: get_waku_v2_debug_v1_info")
+	log.Printf("JSON RPC request: get_waku_v2_debug_v1_info")
 
 	data := Payload{
 		Jsonrpc: "2.0",
@@ -91,12 +90,12 @@ func main() {
 
 	var res = dat["result"].(map[string]interface{})
 
-	fmt.Println("listenStr:", res["listenStr"])
+	log.Printf("JSON RPC response listenStr: %s", res["listenStr"])
 
 	// Stop process
 	// Since we have reference to same process we can also use cmd.Process.Kill()
 	strb, _ := ioutil.ReadFile("wakunode2.lock")
 	command := exec.Command("kill", string(strb))
 	command.Start()
-	fmt.Println("Stopping wakunode2 process")
+	log.Printf("Stopping wakunode2 process")
 }
